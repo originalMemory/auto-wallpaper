@@ -1,7 +1,11 @@
 package com.example.autowallpaper
 
+import android.app.WallpaperManager
 import android.content.Intent
+import android.graphics.BitmapFactory
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import me.rosuh.filepicker.bean.FileItemBeanImpl
@@ -41,6 +45,27 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
+    private fun setWallpaper(imagePath: String) {
+        try {
+            val bitmap = BitmapFactory.decodeFile(imagePath)
+            val wpManager = WallpaperManager.getInstance(this)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                // On Android N and above use the new API to set both the general system wallpaper and
+                // the lock-screen-specific wallpaper
+                wpManager.setBitmap(
+                    bitmap,
+                    null,
+                    true,
+                    WallpaperManager.FLAG_SYSTEM
+                )
+            } else {
+                wpManager.setBitmap(bitmap)
+            }
+        } catch (e: Exception) {
+            Log.e("wallpaper", e.message.toString())
         }
     }
 }
