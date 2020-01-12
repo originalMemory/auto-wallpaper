@@ -1,14 +1,16 @@
 package com.example.autowallpaper
 
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.os.IBinder
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.autowallpaper.helper.Const.KEY_IMAGE_FOLDER_PATH
-import com.example.autowallpaper.helper.Const.KEY_TIME_INTERVAL
 import com.example.autowallpaper.helper.PrefHelper
+import com.example.autowallpaper.helper.getImagePathList
 import com.example.autowallpaper.helper.hideSoftKeyboard
-import com.example.autowallpaper.helper.isImage
 import kotlinx.android.synthetic.main.activity_main.*
 import me.rosuh.filepicker.bean.FileItemBeanImpl
 import me.rosuh.filepicker.config.AbstractFileFilter
@@ -17,7 +19,40 @@ import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+
+        private const val KEY_TIME_INTERVAL = "timeInterval"
+        private const val KEY_IMAGE_FOLDER_PATH = "imageFolderPath"
+        private const val KEY_CURRENT_IMAGE_INDEX = "currentImageIndex"
+    }
+
     private val prefHelper by lazy { PrefHelper() }
+
+    private var imageSize = 0
+    private var timeInterval = 0
+    private var currentImageIndex = 0
+    private var imageFolderPath = ""
+    private var imageBinder: AutoWallpaperService.ImageBinder? = null
+    private val connection = object : ServiceConnection {
+
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            imageBinder = service as? AutoWallpaperService.ImageBinder
+            imageBinder?.listener = { index, path ->
+                currentImageIndex = index
+                val fileName = path.substringAfterLast('/')
+                currentIndexTextView.text = "[${index + 1}/$imageSize] $fileName"
+                val bitmap = BitmapFactory.decodeFile(path)
+                imageView.setImageBitmap(bitmap)
+            }
+            if (timeInterval > 0 && imageFolderPath.isNotEmpty()) {
+                imageBinder?.startChangeWallpaper(imageFolderPath, timeInterval, currentImageIndex)
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            imageBinder = null
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,28 +60,27 @@ class MainActivity : AppCompatActivity() {
 
         setupInterface()
         loadConfig()
+        bindAutoWallpaperService()
     }
 
     private fun loadConfig() {
-        val timeInterval = prefHelper.getInt(KEY_TIME_INTERVAL)
-        val imageFolderPath = prefHelper.getString(KEY_IMAGE_FOLDER_PATH)
-        if (timeInterval > 0 && imageFolderPath.isNotEmpty()) {
-            startReplaceWallpaper(imageFolderPath, timeInterval)
-        }
+        timeInterval = prefHelper.getInt(KEY_TIME_INTERVAL)
+        imageFolderPath = prefHelper.getString(KEY_IMAGE_FOLDER_PATH)
+        currentImageIndex = prefHelper.getInt(KEY_CURRENT_IMAGE_INDEX)
         imageFolderPathTextView.text = if (imageFolderPath.isNotEmpty()) imageFolderPath else "未选择文件夹"
+        if (imageFolderPath.isNotEmpty()) {
+            imageSize = File(imageFolderPath).getImagePathList().size
+        }
         timeIntervalEditText.setText(timeInterval.toString())
     }
 
-    private fun startReplaceWallpaper(imageFolderPath: String, timeInterval: Int) {
+    private fun bindAutoWallpaperService() {
         val intent = Intent(this, AutoWallpaperService::class.java)
-        intent.putExtra(KEY_IMAGE_FOLDER_PATH, imageFolderPath)
-        intent.putExtra(KEY_TIME_INTERVAL, timeInterval)
-        startService(intent)
+        bindService(intent, connection, BIND_AUTO_CREATE)
     }
 
-    private fun stopReplaceWallpaper() {
-        val intent = Intent(this, AutoWallpaperService::class.java)
-        stopService(intent)
+    private fun unBindAutoWallpaperService() {
+        unbindService(connection)
     }
 
     private fun setupInterface() {
@@ -74,11 +108,16 @@ class MainActivity : AppCompatActivity() {
         }
         saveButton.setOnClickListener {
             val imageFolderPath = imageFolderPathTextView.text.toString()
-            val imagePaths = File(imageFolderPath).listFiles()?.map { it.absolutePath } ?: listOf()
-            if (!imagePaths.any { it.isImage() }) {
+            if (imageFolderPath != this.imageFolderPath) {
+                currentImageIndex = 0
+            }
+            this.imageFolderPath = imageFolderPath
+            val imagePaths = File(imageFolderPath).getImagePathList()
+            if (imagePaths.isEmpty()) {
                 toast("选择的文件夹没有图片")
                 return@setOnClickListener
             }
+            imageSize = imagePaths.size
             prefHelper.put(KEY_IMAGE_FOLDER_PATH, imageFolderPath)
 
             val timeInterval = timeIntervalEditText.text.toString().toInt()
@@ -86,9 +125,10 @@ class MainActivity : AppCompatActivity() {
                 toast("时间不能为 0 ")
                 return@setOnClickListener
             }
+            this.timeInterval = timeInterval
             prefHelper.put(KEY_TIME_INTERVAL, timeInterval)
 
-            startReplaceWallpaper(imageFolderPath, timeInterval)
+            imageBinder?.startChangeWallpaper(imageFolderPath, timeInterval, currentImageIndex)
         }
     }
 
@@ -108,7 +148,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        stopReplaceWallpaper()
+        unBindAutoWallpaperService()
+        prefHelper.put(KEY_CURRENT_IMAGE_INDEX, currentImageIndex)
         super.onDestroy()
     }
 }
