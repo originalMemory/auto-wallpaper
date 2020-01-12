@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity() {
             imageBinder = service as? AutoWallpaperService.ImageBinder
             imageBinder?.listener = { index, path ->
                 currentImageIndex = index
+                prefHelper.put(KEY_CURRENT_IMAGE_INDEX, currentImageIndex)
                 val fileName = path.substringAfterLast('/')
                 currentIndexTextView.text = "[${index + 1}/$imageSize] $fileName"
                 val bitmap = BitmapFactory.decodeFile(path)
@@ -149,7 +150,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         unBindAutoWallpaperService()
-        prefHelper.put(KEY_CURRENT_IMAGE_INDEX, currentImageIndex)
         super.onDestroy()
     }
 }
