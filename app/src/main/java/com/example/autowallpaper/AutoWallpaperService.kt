@@ -42,6 +42,7 @@ class AutoWallpaperService : Service() {
                 date.set(Calendar.SECOND, 0)
                 val delayTime = date.timeInMillis - System.currentTimeMillis()
                 handler.postDelayed(runnable, delayTime)
+                return@Runnable
             }
             val imagePath = imagePaths[currentImageIndex]
             log("index: $currentImageIndex\timageName:${imagePath.substringAfterLast('/')}")

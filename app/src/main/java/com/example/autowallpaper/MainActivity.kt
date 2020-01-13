@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
 
     private val prefHelper by lazy { PrefHelper() }
 
-    private var imageSize = 0
+    private var imagePaths = listOf<String>()
     private var timeInterval = 0
     private var currentImageIndex = 0
     private var imageFolderPath = ""
@@ -37,13 +37,20 @@ class MainActivity : AppCompatActivity() {
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             imageBinder = service as? AutoWallpaperService.ImageBinder
-            imageBinder?.listener = { index, path ->
-                currentImageIndex = index
+            imageBinder?.listener = { systemIndex, systemPath ->
+                currentImageIndex = systemIndex
                 prefHelper.put(KEY_CURRENT_IMAGE_INDEX, currentImageIndex)
-                val fileName = path.substringAfterLast('/')
-                currentIndexTextView.text = "[${index + 1}/$imageSize] $fileName"
-                val bitmap = BitmapFactory.decodeFile(path)
-                imageView.setImageBitmap(bitmap)
+                val systemFileName = systemPath.substringAfterLast('/')
+                systemIndexTextView.text = "[${systemIndex + 1}/${imagePaths.size}]\n$systemFileName"
+                val systemBitmap = BitmapFactory.decodeFile(systemPath)
+                systemImageView.setImageBitmap(systemBitmap)
+
+                val lockIndex = imagePaths.size - systemIndex - 1
+                val lockPath = imagePaths[lockIndex]
+                val lockFileName = lockPath.substringAfterLast('/')
+                lockIndexTextView.text = "[${lockIndex + 1}/${imagePaths.size}]\n$lockFileName"
+                val lockBitmap = BitmapFactory.decodeFile(lockPath)
+                lockImageView.setImageBitmap(lockBitmap)
             }
             if (timeInterval > 0 && imageFolderPath.isNotEmpty()) {
                 imageBinder?.startChangeWallpaper(imageFolderPath, timeInterval, currentImageIndex)
@@ -70,7 +77,7 @@ class MainActivity : AppCompatActivity() {
         currentImageIndex = prefHelper.getInt(KEY_CURRENT_IMAGE_INDEX)
         imageFolderPathTextView.text = if (imageFolderPath.isNotEmpty()) imageFolderPath else "未选择文件夹"
         if (imageFolderPath.isNotEmpty()) {
-            imageSize = File(imageFolderPath).getImagePathList().size
+            imagePaths = File(imageFolderPath).getImagePathList()
         }
         timeIntervalEditText.setText(timeInterval.toString())
     }
@@ -113,12 +120,11 @@ class MainActivity : AppCompatActivity() {
                 currentImageIndex = 0
             }
             this.imageFolderPath = imageFolderPath
-            val imagePaths = File(imageFolderPath).getImagePathList()
+            imagePaths = File(imageFolderPath).getImagePathList()
             if (imagePaths.isEmpty()) {
                 toast("选择的文件夹没有图片")
                 return@setOnClickListener
             }
-            imageSize = imagePaths.size
             prefHelper.put(KEY_IMAGE_FOLDER_PATH, imageFolderPath)
 
             val timeInterval = timeIntervalEditText.text.toString().toInt()
