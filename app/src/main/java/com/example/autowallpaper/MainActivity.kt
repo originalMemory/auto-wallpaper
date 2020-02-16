@@ -6,6 +6,7 @@ import android.content.ServiceConnection
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.IBinder
+import android.os.PersistableBundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.autowallpaper.helper.PrefHelper
@@ -23,7 +24,7 @@ class MainActivity : AppCompatActivity() {
 
         private const val KEY_TIME_INTERVAL = "timeInterval"
         private const val KEY_IMAGE_FOLDER_PATH = "imageFolderPath"
-        private const val KEY_CURRENT_IMAGE_INDEX = "currentImageIndex"
+        const val KEY_CURRENT_IMAGE_INDEX = "currentImageIndex"
     }
 
     private val prefHelper by lazy { PrefHelper() }
@@ -37,23 +38,9 @@ class MainActivity : AppCompatActivity() {
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             imageBinder = service as? AutoWallpaperService.ImageBinder
-            imageBinder?.listener = { systemIndex, systemPath ->
-                currentImageIndex = systemIndex
-                prefHelper.put(KEY_CURRENT_IMAGE_INDEX, currentImageIndex)
-                val systemFileName = systemPath.substringAfterLast('/')
-                systemIndexTextView.text = "[${systemIndex + 1}/${imagePaths.size}]\n$systemFileName"
-                val systemBitmap = BitmapFactory.decodeFile(systemPath)
-                systemImageView.setImageBitmap(systemBitmap)
-
-                val lockIndex = imagePaths.size - systemIndex - 1
-                val lockPath = imagePaths[lockIndex]
-                val lockFileName = lockPath.substringAfterLast('/')
-                lockIndexTextView.text = "[${lockIndex + 1}/${imagePaths.size}]\n$lockFileName"
-                val lockBitmap = BitmapFactory.decodeFile(lockPath)
-                lockImageView.setImageBitmap(lockBitmap)
-            }
-            if (timeInterval > 0 && imageFolderPath.isNotEmpty()) {
-                imageBinder?.startChangeWallpaper(imageFolderPath, timeInterval, currentImageIndex)
+            imageBinder?.listener = {
+                currentImageIndex = it
+                renderImage(it)
             }
         }
 
@@ -62,13 +49,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun renderImage(systemIndex: Int) {
+        if (systemIndex >= imagePaths.size) {
+            return
+        }
+        currentImageIndex = systemIndex
+        val systemPath = imagePaths[systemIndex]
+        val systemFileName = systemPath.substringAfterLast('/')
+        systemIndexTextView.text = "[${systemIndex + 1}/${imagePaths.size}]\n$systemFileName"
+        val systemBitmap = BitmapFactory.decodeFile(systemPath)
+        systemImageView.setImageBitmap(systemBitmap)
+
+        val lockIndex = imagePaths.size - systemIndex - 1
+        val lockPath = imagePaths[lockIndex]
+        val lockFileName = lockPath.substringAfterLast('/')
+        lockIndexTextView.text = "[${lockIndex + 1}/${imagePaths.size}]\n$lockFileName"
+        val lockBitmap = BitmapFactory.decodeFile(lockPath)
+        lockImageView.setImageBitmap(lockBitmap)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         setupInterface()
         loadConfig()
-        bindAutoWallpaperService()
+        if (imageFolderPath.isNotEmpty()) {
+            val intent = Intent(this, AutoWallpaperService::class.java)
+            startForegroundService(intent)
+        }
     }
 
     private fun loadConfig() {
@@ -80,6 +89,7 @@ class MainActivity : AppCompatActivity() {
             imagePaths = File(imageFolderPath).getImagePathList()
         }
         timeIntervalEditText.setText(timeInterval.toString())
+        renderImage(currentImageIndex)
     }
 
     private fun bindAutoWallpaperService() {
@@ -137,6 +147,10 @@ class MainActivity : AppCompatActivity() {
 
             imageBinder?.startChangeWallpaper(imageFolderPath, timeInterval, currentImageIndex)
         }
+        stopButton.setOnClickListener {
+            val intent = Intent(this, AutoWallpaperService::class.java)
+            stopService(intent)
+        }
     }
 
     private fun toast(content: String) {
@@ -154,8 +168,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() {
-        unBindAutoWallpaperService()
-        super.onDestroy()
+    override fun onStart() {
+        super.onStart()
+        if (imageBinder == null) {
+            bindAutoWallpaperService()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        imageBinder?.let {
+            if (it.index != currentImageIndex && imagePaths.isNotEmpty()) {
+                renderImage(it.index)
+            }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
     }
 }

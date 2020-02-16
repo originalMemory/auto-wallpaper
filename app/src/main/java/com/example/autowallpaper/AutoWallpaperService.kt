@@ -1,7 +1,6 @@
 package com.example.autowallpaper
 
-import android.app.Service
-import android.app.WallpaperManager
+import android.app.*
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -11,6 +10,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.util.Log
 import com.example.autowallpaper.helper.GlobalApplication
+import com.example.autowallpaper.helper.PrefHelper
 import com.example.autowallpaper.helper.getImagePathList
 import java.io.File
 import java.util.*
@@ -22,6 +22,8 @@ class AutoWallpaperService : Service() {
 
         private val TAG = AutoWallpaperService::class.java.simpleName
 
+        private const val KEY_CURRENT_IMAGE_INDEX = "currentImageIndex"
+
         private const val SECOND = 1000L
         private const val MINUTE = 60 * SECOND
     }
@@ -30,6 +32,7 @@ class AutoWallpaperService : Service() {
     private var imageFolderPath = ""
     private var currentImageIndex = 0
     private var imagePaths = listOf<String>()
+    private val prefHelper by lazy { PrefHelper() }
 
     private val handler by lazy { Handler() }
     private val runnable: Runnable by lazy {
@@ -37,24 +40,25 @@ class AutoWallpaperService : Service() {
             val date = Calendar.getInstance()
             val hour = date.get(Calendar.HOUR_OF_DAY)
             if (hour < 8) {
-                date.set(Calendar.HOUR_OF_DAY, 8)
-                date.set(Calendar.MINUTE, 0)
-                date.set(Calendar.SECOND, 0)
-                val delayTime = date.timeInMillis - System.currentTimeMillis()
-                handler.postDelayed(runnable, delayTime)
+//                date.set(Calendar.HOUR_OF_DAY, 8)
+//                date.set(Calendar.MINUTE, 0)
+//                date.set(Calendar.SECOND, 0)
+//                val delayTime = date.timeInMillis - System.currentTimeMillis()
+                handler.postDelayed(runnable, timeInterval * MINUTE)
                 return@Runnable
             }
             val imagePath = imagePaths[currentImageIndex]
             log("index: $currentImageIndex\timageName:${imagePath.substringAfterLast('/')}")
             setWallpaper(imagePath, true)
             setWallpaper(imagePaths[imagePaths.size - currentImageIndex - 1], false)
-            wallpaperChangeListener?.invoke(currentImageIndex, imagePath)
+            wallpaperChangeListener?.invoke(currentImageIndex)
+            prefHelper.put(MainActivity.KEY_CURRENT_IMAGE_INDEX, currentImageIndex)
 
             currentImageIndex = if (currentImageIndex < imagePaths.size - 1) currentImageIndex + 1 else 0
             handler.postDelayed(runnable, timeInterval * MINUTE)
         }
     }
-    private var wallpaperChangeListener: ((Int, String) -> Unit)? = null
+    private var wallpaperChangeListener: ((Int) -> Unit)? = null
 
     private fun log(info: String) {
         Log.i(TAG, info)
@@ -117,17 +121,38 @@ class AutoWallpaperService : Service() {
         super.onDestroy()
     }
 
+    private val CHANNEL_ID = "autoWallpaper"
+    private val CHANNEL_NAME = "自动更换壁纸"
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val channel = NotificationChannel(
+            CHANNEL_ID, CHANNEL_NAME,
+            NotificationManager.IMPORTANCE_HIGH
+        )
+
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        manager.createNotificationChannel(channel)
+
+        val notification =
+            Notification.Builder(applicationContext, CHANNEL_ID).build()
+        startForeground(1, notification)
+        return super.onStartCommand(intent, flags, startId)
+    }
+
     override fun onBind(intent: Intent?): IBinder? {
         return ImageBinder()
     }
 
     internal inner class ImageBinder : Binder() {
 
-        var listener: ((Int, String) -> Unit)? = null
+        var listener: ((Int) -> Unit)? = null
             set(value) {
                 field = value
                 wallpaperChangeListener = value
             }
+
+        val index
+            get() = if (currentImageIndex == 0) imagePaths.size - 1 else currentImageIndex - 1
 
         fun startChangeWallpaper(imageFolderPath: String, timeInterval: Int, currentImageIndex: Int) {
             this@AutoWallpaperService.timeInterval = timeInterval

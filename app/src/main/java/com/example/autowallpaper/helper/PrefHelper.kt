@@ -41,7 +41,7 @@ class PrefHelper(private val prefName: String = defaultPrefName) {
     }
 
     fun getString(key: String, defValue: String = ""): String {
-        return getPref()!!.getString(key, defValue)
+        return getPref()!!.getString(key, defValue) ?: defValue
     }
 
     fun getBoolean(key: String, defValue: Boolean = false): Boolean {
