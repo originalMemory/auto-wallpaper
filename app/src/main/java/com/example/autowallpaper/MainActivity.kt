@@ -84,7 +84,8 @@ class MainActivity : AppCompatActivity() {
         timeInterval = prefHelper.getInt(KEY_TIME_INTERVAL)
         imageFolderPath = prefHelper.getString(KEY_IMAGE_FOLDER_PATH)
         currentImageIndex = prefHelper.getInt(KEY_CURRENT_IMAGE_INDEX)
-        imageFolderPathTextView.text = if (imageFolderPath.isNotEmpty()) imageFolderPath else "未选择文件夹"
+        imageFolderPathTextView.text =
+            if (imageFolderPath.isNotEmpty()) imageFolderPath else "未选择文件夹"
         if (imageFolderPath.isNotEmpty()) {
             imagePaths = File(imageFolderPath).getImagePathList()
         }
