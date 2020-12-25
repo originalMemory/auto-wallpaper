@@ -54,7 +54,12 @@ class AutoWallpaperService : Service() {
             wallpaperChangeListener?.invoke(currentImageIndex)
             prefHelper.put(MainActivity.KEY_CURRENT_IMAGE_INDEX, currentImageIndex)
 
-            currentImageIndex = if (currentImageIndex < imagePaths.size - 1) currentImageIndex + 1 else 0
+            val isRandom = prefHelper.getBoolean(MainActivity.KEY_RANDOM_CHANGE)
+            currentImageIndex = if (isRandom) {
+                (imagePaths.indices).random()
+            } else {
+                if (currentImageIndex < imagePaths.size - 1) currentImageIndex + 1 else 0
+            }
             handler.postDelayed(runnable, timeInterval * MINUTE)
         }
     }

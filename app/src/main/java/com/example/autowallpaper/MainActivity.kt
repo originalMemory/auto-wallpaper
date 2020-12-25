@@ -1,5 +1,6 @@
 package com.example.autowallpaper
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -25,6 +26,7 @@ class MainActivity : AppCompatActivity() {
         private const val KEY_TIME_INTERVAL = "timeInterval"
         private const val KEY_IMAGE_FOLDER_PATH = "imageFolderPath"
         const val KEY_CURRENT_IMAGE_INDEX = "currentImageIndex"
+        const val KEY_RANDOM_CHANGE = "randomChange"
     }
 
     private val prefHelper by lazy { PrefHelper() }
@@ -102,6 +104,7 @@ class MainActivity : AppCompatActivity() {
         unbindService(connection)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun setupInterface() {
         imageFolderPathTextView.setOnClickListener {
             val filter = object : AbstractFileFilter() {
@@ -151,6 +154,10 @@ class MainActivity : AppCompatActivity() {
         stopButton.setOnClickListener {
             val intent = Intent(this, AutoWallpaperService::class.java)
             stopService(intent)
+        }
+        randomCheckBox.isChecked = prefHelper.getBoolean(KEY_RANDOM_CHANGE)
+        randomCheckBox.setOnClickListener {
+            prefHelper.put(KEY_RANDOM_CHANGE, randomCheckBox.isChecked)
         }
     }
 

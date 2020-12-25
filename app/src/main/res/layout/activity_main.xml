@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
     android:layout_width="match_parent"
@@ -15,7 +14,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="图片目录"/>
+        android:text="图片目录" />
 
     <TextView
         android:id="@+id/imageFolderPathTextView"
@@ -24,38 +23,45 @@
         android:layout_marginTop="10dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:text="壁纸"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="刷新时间"/>
+        android:text="壁纸" />
 
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="刷新时间" />
 
         <EditText
             android:id="@+id/timeIntervalEditText"
             android:layout_width="40dp"
             android:layout_height="wrap_content"
-            android:inputType="number"/>
+            android:inputType="number" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
-            android:text="分"/>
+            android:text="分" />
 
     </LinearLayout>
 
+    <CheckBox
+        android:id="@+id/randomCheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="是否随机切换" />
+
     <LinearLayout
         android:layout_width="match_parent"
-        android:orientation="horizontal"
-        android:gravity="center"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
-        android:layout_height="wrap_content">
+        android:gravity="center"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/saveButton"
@@ -63,90 +69,90 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="10dp"
-            android:text="保存"/>
+            android:text="保存" />
 
         <Space
             android:layout_width="40dp"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent" />
 
         <Button
             android:id="@+id/stopButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:text="停止"/>
+            android:text="停止" />
 
 
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:orientation="horizontal"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="桌面"
-                android:layout_marginBottom="10dp"
-                android:layout_gravity="center"/>
-
-            <TextView
-                android:layout_marginTop="20dp"
-                android:layout_width="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:layout_height="wrap_content"
-                android:maxLines="2"
-                android:ellipsize="end"
-                android:textAlignment="center"
-                android:layout_gravity="center_horizontal"
-                android:id="@+id/systemIndexTextView"/>
-
-            <ImageView
-                android:id="@+id/systemImageView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
-
-        </LinearLayout>
-
-        <Space
-            android:layout_width="10dp"
-            android:layout_height="match_parent"/>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="match_parent"
+            android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="锁屏"
+                android:layout_gravity="center"
                 android:layout_marginBottom="10dp"
-                android:layout_gravity="center"/>
+                android:text="桌面" />
 
             <TextView
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="10dp"
+                android:id="@+id/systemIndexTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:maxLines="2"
-                android:ellipsize="end"
-                android:textAlignment="center"
                 android:layout_gravity="center_horizontal"
-                android:id="@+id/lockIndexTextView"/>
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="10dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAlignment="center" />
+
+            <ImageView
+                android:id="@+id/systemImageView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </LinearLayout>
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="match_parent" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="10dp"
+                android:text="锁屏" />
+
+            <TextView
+                android:id="@+id/lockIndexTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="10dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAlignment="center" />
 
             <ImageView
                 android:id="@+id/lockImageView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+                android:layout_height="match_parent" />
 
         </LinearLayout>
 
