@@ -10,6 +10,7 @@ import android.os.IBinder
 import android.os.PersistableBundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.example.autowallpaper.helper.PrefHelper
 import com.example.autowallpaper.helper.getImagePathList
 import com.example.autowallpaper.helper.hideSoftKeyboard
@@ -52,22 +53,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderImage(systemIndex: Int) {
-        if (systemIndex >= imagePaths.size) {
+        if (systemIndex >= imagePaths.size || systemIndex < 0) {
             return
         }
         currentImageIndex = systemIndex
         val systemPath = imagePaths[systemIndex]
         val systemFileName = systemPath.substringAfterLast('/')
         systemIndexTextView.text = "[${systemIndex + 1}/${imagePaths.size}]\n$systemFileName"
-        val systemBitmap = BitmapFactory.decodeFile(systemPath)
-        systemImageView.setImageBitmap(systemBitmap)
+        Glide.with(this).load(systemPath).into(systemImageView)
 
         val lockIndex = imagePaths.size - systemIndex - 1
         val lockPath = imagePaths[lockIndex]
         val lockFileName = lockPath.substringAfterLast('/')
         lockIndexTextView.text = "[${lockIndex + 1}/${imagePaths.size}]\n$lockFileName"
-        val lockBitmap = BitmapFactory.decodeFile(lockPath)
-        lockImageView.setImageBitmap(lockBitmap)
+        Glide.with(this).load(lockPath).into(lockImageView)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
