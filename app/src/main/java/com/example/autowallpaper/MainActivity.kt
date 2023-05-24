@@ -143,6 +143,14 @@ class MainActivity : AppCompatActivity() {
         randomCheckBox.setOnClickListener {
             WallpaperData.isRandom = randomCheckBox.isChecked
         }
+        changeLockCheckBox.isChecked = WallpaperData.isChangeLock
+        changeLockCheckBox.setOnClickListener {
+            WallpaperData.isChangeLock = changeLockCheckBox.isChecked
+        }
+        resizeSystemCheckBox.isChecked = WallpaperData.isResizeSystem
+        resizeSystemCheckBox.setOnClickListener {
+            WallpaperData.isResizeSystem = resizeSystemCheckBox.isChecked
+        }
     }
 
     private fun toast(content: String) {

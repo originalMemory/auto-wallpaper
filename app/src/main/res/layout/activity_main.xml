@@ -49,11 +49,29 @@
 
     </LinearLayout>
 
-    <CheckBox
-        android:id="@+id/randomCheckBox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="是否随机切换" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <CheckBox
+            android:id="@+id/randomCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="随机切换" />
+
+        <CheckBox
+            android:id="@+id/changeLockCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="更换锁屏" />
+
+        <CheckBox
+            android:id="@+id/resizeSystemCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="居中缩放系统图" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

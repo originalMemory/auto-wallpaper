@@ -4,7 +4,6 @@ import android.app.*
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Rect
 import android.os.Binder
 import android.os.Handler
 import android.os.IBinder
@@ -20,6 +19,8 @@ object WallpaperData {
     private const val KEY_IMAGE_FOLDER_PATH = "imageFolderPath"
     private const val KEY_CURRENT_INDEX = "currentIndex"
     private const val KEY_RANDOM_CHANGE = "randomChange"
+    private const val KEY_CHANGE_LOCK = "changeLock"
+    private const val KEY_RESIZE_SYSTEM = "resizeSystem"
 
     var timeInterval = 0
     var imageFolderPath = ""
@@ -27,6 +28,16 @@ object WallpaperData {
         set(value) {
             field = value
             prefHelper.put(KEY_RANDOM_CHANGE, value)
+        }
+    var isChangeLock = false
+        set(value) {
+            field = value
+            prefHelper.put(KEY_CHANGE_LOCK, value)
+        }
+    var isResizeSystem = false
+        set(value) {
+            field = value
+            prefHelper.put(KEY_RESIZE_SYSTEM, value)
         }
     var curIndex = 0
     var nextIndex = 0
@@ -100,8 +111,6 @@ class AutoWallpaperService : Service() {
 
         private val TAG = AutoWallpaperService::class.java.simpleName
 
-        private const val KEY_CURRENT_IMAGE_INDEX = "currentImageIndex"
-
         private const val SECOND = 1000L
         private const val MINUTE = 60 * SECOND
     }
@@ -115,7 +124,7 @@ class AutoWallpaperService : Service() {
     }
 
     private fun changeWallpaper() {
-        val date = Calendar.getInstance()
+//        val date = Calendar.getInstance()
 //        val hour = date.get(Calendar.HOUR_OF_DAY)
 //        if (hour < 8) {
 //            date.set(Calendar.HOUR_OF_DAY, 8)
@@ -147,9 +156,10 @@ class AutoWallpaperService : Service() {
 
     private fun setWallpaper(imagePath: String, isSystem: Boolean) {
         val wpManager = WallpaperManager.getInstance(this)
+        if (!isSystem && !WallpaperData.isChangeLock) return
         try {
             var bitmap = BitmapFactory.decodeFile(imagePath)
-            if (isSystem) {
+            if (isSystem && WallpaperData.isResizeSystem) {
 //                log("oldWidth: ${bitmap.width}\toldHeight:${bitmap.height}")
                 val displayMetrics = GlobalApplication.instance.resources.displayMetrics
                 val screenScale = displayMetrics.widthPixels / displayMetrics.heightPixels.toFloat()
