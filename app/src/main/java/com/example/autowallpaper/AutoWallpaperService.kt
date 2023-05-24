@@ -4,6 +4,7 @@ import android.app.*
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Rect
 import android.os.Binder
 import android.os.Handler
 import android.os.IBinder
@@ -115,15 +116,15 @@ class AutoWallpaperService : Service() {
 
     private fun changeWallpaper() {
         val date = Calendar.getInstance()
-        val hour = date.get(Calendar.HOUR_OF_DAY)
-        if (hour < 8) {
-            //                date.set(Calendar.HOUR_OF_DAY, 8)
-            //                date.set(Calendar.MINUTE, 0)
-            //                date.set(Calendar.SECOND, 0)
-            //                val delayTime = date.timeInMillis - System.currentTimeMillis()
-            handler.postDelayed(runnable, WallpaperData.timeInterval * MINUTE)
-            return
-        }
+//        val hour = date.get(Calendar.HOUR_OF_DAY)
+//        if (hour < 8) {
+//            date.set(Calendar.HOUR_OF_DAY, 8)
+//            date.set(Calendar.MINUTE, 0)
+//            date.set(Calendar.SECOND, 0)
+//            val delayTime = date.timeInMillis - System.currentTimeMillis()
+//            handler.postDelayed(runnable, delayTime)
+//            return
+//        }
         WallpaperData.checkFolder()?.let {
             errorListener?.invoke(it)
             return
@@ -145,13 +146,15 @@ class AutoWallpaperService : Service() {
     }
 
     private fun setWallpaper(imagePath: String, isSystem: Boolean) {
+        val wpManager = WallpaperManager.getInstance(this)
         try {
             var bitmap = BitmapFactory.decodeFile(imagePath)
-            if (!isSystem) {
-                log("oldWidth: ${bitmap.width}\toldHeight:${bitmap.height}")
+            if (isSystem) {
+//                log("oldWidth: ${bitmap.width}\toldHeight:${bitmap.height}")
                 val displayMetrics = GlobalApplication.instance.resources.displayMetrics
                 val screenScale = displayMetrics.widthPixels / displayMetrics.heightPixels.toFloat()
                 val newWidth = (bitmap.height * screenScale).toInt()
+//                log("screenScale: $screenScale")
                 // 只裁剪
                 when {
                     // 裁剪宽度
@@ -172,7 +175,6 @@ class AutoWallpaperService : Service() {
                     }
                 }
             }
-            val wpManager = WallpaperManager.getInstance(this)
             val flag = if (isSystem) WallpaperManager.FLAG_SYSTEM else WallpaperManager.FLAG_LOCK
             wpManager.setBitmap(
                 bitmap,
@@ -181,7 +183,8 @@ class AutoWallpaperService : Service() {
                 flag
             )
         } catch (e: Exception) {
-            Log.e("wallpaper", e.message.toString())
+            wpManager.setResource(R.raw.default_bg)
+            Log.e(TAG, "设置壁纸出错：${e.message}")
         }
     }
 

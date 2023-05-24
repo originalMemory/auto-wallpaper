@@ -1,11 +1,13 @@
 package com.example.autowallpaper
 
 import android.annotation.SuppressLint
+import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
@@ -75,6 +77,8 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, AutoWallpaperService::class.java)
             startForegroundService(intent)
         }
+        Log.i("testWu", "更新壁纸")
+//        WallpaperManager.getInstance(this).setResource(R.raw.default_bg)
     }
 
     private fun loadConfig() {
@@ -89,7 +93,8 @@ class MainActivity : AppCompatActivity() {
         bindService(intent, connection, BIND_AUTO_CREATE)
     }
 
-    private fun unBindAutoWallpaperService() {
+    override fun onDestroy() {
+        super.onDestroy()
         unbindService(connection)
     }
 
