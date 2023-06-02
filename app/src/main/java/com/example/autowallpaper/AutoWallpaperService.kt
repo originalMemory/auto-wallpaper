@@ -137,19 +137,24 @@ class AutoWallpaperService : Service() {
 //            handler.postDelayed(runnable, delayTime)
 //            return
 //        }
-        WallpaperData.checkFolder()?.let {
-            errorListener?.invoke(it)
-            return
+        try {
+            WallpaperData.checkFolder()?.let {
+                errorListener?.invoke(it)
+                return
+            }
+            val imagePath = WallpaperData.nextImagePath ?: return
+            val lockImagePath = WallpaperData.lockNextImagePath ?: return
+            WallpaperData.refreshNextIndex()
+            setWallpaper(imagePath, isSystem = true)
+            setWallpaper(lockImagePath, isSystem = false)
+            wallpaperChangeListener?.invoke()
+            val notification = createNotification()
+            manager.notify(NOTIFICATION_ID, notification)
+        } catch (e: Exception) {
+            Log.e(TAG, "设置壁纸出错：${e.message}")
+        } finally {
+            handler.postDelayed(runnable, WallpaperData.timeInterval * MINUTE)
         }
-        val imagePath = WallpaperData.nextImagePath ?: return
-        val lockImagePath = WallpaperData.lockNextImagePath ?: return
-        WallpaperData.refreshNextIndex()
-        setWallpaper(imagePath, isSystem = true)
-        setWallpaper(lockImagePath, isSystem = false)
-        wallpaperChangeListener?.invoke()
-        val notification = createNotification()
-        handler.postDelayed(runnable, WallpaperData.timeInterval * MINUTE)
-        manager.notify(NOTIFICATION_ID, notification)
     }
 
     private var wallpaperChangeListener: (() -> Unit)? = null
@@ -162,45 +167,41 @@ class AutoWallpaperService : Service() {
     private fun setWallpaper(imagePath: String, isSystem: Boolean) {
         val wpManager = WallpaperManager.getInstance(this)
         if (!isSystem && !WallpaperData.isChangeLock) return
-        try {
-            var bitmap = BitmapFactory.decodeFile(imagePath)
-            if (isSystem && WallpaperData.isResizeSystem) {
+        var bitmap = BitmapFactory.decodeFile(imagePath)
+        if (isSystem && WallpaperData.isResizeSystem) {
 //                log("oldWidth: ${bitmap.width}\toldHeight:${bitmap.height}")
-                val displayMetrics = GlobalApplication.instance.resources.displayMetrics
-                val screenScale = displayMetrics.widthPixels / displayMetrics.heightPixels.toFloat()
-                val newWidth = (bitmap.height * screenScale).toInt()
-//                log("screenScale: $screenScale")
-                // 只裁剪
-                when {
-                    // 裁剪宽度
-                    newWidth < bitmap.width -> {
-                        val startX = (bitmap.width - newWidth) / 2
-                        bitmap = Bitmap.createBitmap(bitmap, startX, 0, newWidth, bitmap.height)
-                        log("newWidth: $newWidth\tnewHeight:${bitmap.height}")
-                    }
-                    // 裁剪高度
-                    newWidth > bitmap.width -> {
-                        val newHeight = (bitmap.width / screenScale).toInt()
-                        val startY = (bitmap.height - newHeight) / 2
-                        bitmap = Bitmap.createBitmap(bitmap, 0, startY, bitmap.width, newHeight)
-                        log("newWidth: ${bitmap.width}\tnewHeight:$newHeight")
-                    }
-                    else -> {
-                        log("newWidth: ${bitmap.width}\tnewHeight:${bitmap.height}")
-                    }
+            val displayMetrics = GlobalApplication.instance.resources.displayMetrics
+            val screenScale = displayMetrics.widthPixels / displayMetrics.heightPixels.toFloat()
+            val newWidth = (bitmap.height * screenScale).toInt()
+//            log("screenScale: $screenScale")
+            // 只裁剪
+            when {
+                // 裁剪宽度
+                newWidth < bitmap.width -> {
+                    val startX = (bitmap.width - newWidth) / 2
+                    bitmap = Bitmap.createBitmap(bitmap, startX, 0, newWidth, bitmap.height)
+                    log("newWidth: $newWidth\tnewHeight:${bitmap.height}")
+                }
+                // 裁剪高度
+                newWidth > bitmap.width -> {
+                    val newHeight = (bitmap.width / screenScale).toInt()
+                    val startY = (bitmap.height - newHeight) / 2
+                    bitmap = Bitmap.createBitmap(bitmap, 0, startY, bitmap.width, newHeight)
+                    log("newWidth: ${bitmap.width}\tnewHeight:$newHeight")
+                }
+
+                else -> {
+                    log("newWidth: ${bitmap.width}\tnewHeight:${bitmap.height}")
                 }
             }
-            val flag = if (isSystem) WallpaperManager.FLAG_SYSTEM else WallpaperManager.FLAG_LOCK
-            wpManager.setBitmap(
-                bitmap,
-                null,
-                true,
-                flag
-            )
-        } catch (e: Exception) {
-            wpManager.setResource(R.raw.default_bg)
-            Log.e(TAG, "设置壁纸出错：${e.message}")
         }
+        val flag = if (isSystem) WallpaperManager.FLAG_SYSTEM else WallpaperManager.FLAG_LOCK
+        wpManager.setBitmap(
+            bitmap,
+            null,
+            true,
+            flag
+        )
     }
 
     override fun onCreate() {
@@ -222,6 +223,7 @@ class AutoWallpaperService : Service() {
             CHANNEL_ID, CHANNEL_NAME,
             NotificationManager.IMPORTANCE_HIGH
         )
+        channel.setSound(null, null)
 
         manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(channel)
@@ -238,7 +240,10 @@ class AutoWallpaperService : Service() {
             WallpaperData.curImagePath?.substringAfterLast('/')
         )
         remoteView.setTextViewText(R.id.systemImgNameTextView, systemImgName)
-        remoteView.setViewVisibility(R.id.lockImgNameTextView, if (WallpaperData.isChangeLock) View.VISIBLE else View.GONE)
+        remoteView.setViewVisibility(
+            R.id.lockImgNameTextView,
+            if (WallpaperData.isChangeLock) View.VISIBLE else View.GONE
+        )
         if (WallpaperData.isChangeLock) {
             val lockImgName = applicationContext.getString(
                 R.string.lock_img_name,
@@ -247,7 +252,8 @@ class AutoWallpaperService : Service() {
             remoteView.setTextViewText(R.id.lockImgNameTextView, lockImgName)
         }
         val intent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent =
+            PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         return Notification.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setCustomContentView(remoteView)
