@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun renderImage() {
         WallpaperData.curImagePath?.let {
             val fileName = it.substringAfterLast('/')

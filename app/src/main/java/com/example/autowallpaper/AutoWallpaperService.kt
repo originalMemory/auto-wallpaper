@@ -8,11 +8,12 @@ import android.os.Binder
 import android.os.Handler
 import android.os.IBinder
 import android.util.Log
+import android.view.View
+import android.widget.RemoteViews
 import com.example.autowallpaper.helper.GlobalApplication
 import com.example.autowallpaper.helper.PrefHelper
 import com.example.autowallpaper.helper.getImagePathList
 import java.io.File
-import java.util.*
 
 object WallpaperData {
     private const val KEY_TIME_INTERVAL = "timeInterval"
@@ -48,6 +49,8 @@ object WallpaperData {
         timeInterval = prefHelper.getInt(KEY_TIME_INTERVAL, defValue = 1)
         imageFolderPath = prefHelper.getString(KEY_IMAGE_FOLDER_PATH)
         isRandom = prefHelper.getBoolean(KEY_RANDOM_CHANGE)
+        isChangeLock = prefHelper.getBoolean(KEY_CHANGE_LOCK)
+        isResizeSystem = prefHelper.getBoolean(KEY_RESIZE_SYSTEM)
         nextIndex = prefHelper.getInt(KEY_CURRENT_INDEX)
         checkFolder()
         refreshNextIndex()
@@ -144,7 +147,9 @@ class AutoWallpaperService : Service() {
         setWallpaper(imagePath, isSystem = true)
         setWallpaper(lockImagePath, isSystem = false)
         wallpaperChangeListener?.invoke()
+        val notification = createNotification()
         handler.postDelayed(runnable, WallpaperData.timeInterval * MINUTE)
+        manager.notify(NOTIFICATION_ID, notification)
     }
 
     private var wallpaperChangeListener: (() -> Unit)? = null
@@ -210,20 +215,44 @@ class AutoWallpaperService : Service() {
 
     private val CHANNEL_ID = "autoWallpaper"
     private val CHANNEL_NAME = "自动更换壁纸"
-
+    private val NOTIFICATION_ID = 1
+    private lateinit var manager: NotificationManager
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val channel = NotificationChannel(
             CHANNEL_ID, CHANNEL_NAME,
             NotificationManager.IMPORTANCE_HIGH
         )
 
-        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(channel)
 
-        val notification =
-            Notification.Builder(applicationContext, CHANNEL_ID).build()
-        startForeground(1, notification)
+        val notification = createNotification()
+        startForeground(NOTIFICATION_ID, notification)
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun createNotification(): Notification {
+        val remoteView = RemoteViews(packageName, R.layout.notification)
+        val systemImgName = applicationContext.getString(
+            R.string.system_img_name,
+            WallpaperData.curImagePath?.substringAfterLast('/')
+        )
+        remoteView.setTextViewText(R.id.systemImgNameTextView, systemImgName)
+        remoteView.setViewVisibility(R.id.lockImgNameTextView, if (WallpaperData.isChangeLock) View.VISIBLE else View.GONE)
+        if (WallpaperData.isChangeLock) {
+            val lockImgName = applicationContext.getString(
+                R.string.lock_img_name,
+                WallpaperData.lockCurImagePath?.substringAfterLast('/')
+            )
+            remoteView.setTextViewText(R.id.lockImgNameTextView, lockImgName)
+        }
+        val intent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        return Notification.Builder(applicationContext, CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setCustomContentView(remoteView)
+            .setContentIntent(pendingIntent)
+            .build()
     }
 
     override fun onBind(intent: Intent?): IBinder? {

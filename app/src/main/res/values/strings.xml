@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">玄鸟壁纸</string>
+    <string name="system_img_name">桌面：%s</string>
+    <string name="lock_img_name">锁屏：%s</string>
 </resources>
