@@ -123,6 +123,7 @@ class AutoWallpaperService : Service() {
     private val runnable: Runnable by lazy {
         Runnable {
             changeWallpaper()
+            handler.postDelayed(runnable, WallpaperData.timeInterval * MINUTE)
         }
     }
 
@@ -152,8 +153,6 @@ class AutoWallpaperService : Service() {
             manager.notify(NOTIFICATION_ID, notification)
         } catch (e: Exception) {
             Log.e(TAG, "设置壁纸出错：${e.message}")
-        } finally {
-            handler.postDelayed(runnable, WallpaperData.timeInterval * MINUTE)
         }
     }
 
@@ -286,6 +285,11 @@ class AutoWallpaperService : Service() {
 
         fun forceChange() {
             changeWallpaper()
+        }
+
+        fun stop() {
+            handler.removeCallbacks(runnable)
+            stopForeground(true)
         }
     }
 }

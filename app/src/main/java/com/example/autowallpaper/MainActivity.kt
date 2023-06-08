@@ -135,6 +135,7 @@ class MainActivity : AppCompatActivity() {
         }
         stopButton.setOnClickListener {
             val intent = Intent(this, AutoWallpaperService::class.java)
+            imageBinder?.stop()
             stopService(intent)
         }
         nextButton.setOnClickListener {
