@@ -17,4 +17,5 @@
     <string name="next_system">下一张壁纸</string>
     <string name="cur_lockscreen">当前锁屏</string>
     <string name="next_lockscreen">下一张锁屏</string>
+    <string name="countdown_hint">倒计时</string>
 </resources>

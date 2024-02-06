@@ -1,7 +1,6 @@
 package com.example.autowallpaper
 
 import android.annotation.SuppressLint
-import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -25,10 +24,20 @@ class MainActivity : AppCompatActivity() {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             imageBinder = service as? AutoWallpaperService.ImageBinder
             imageBinder?.setChangeListener {
-                renderImage()
+                if (!isForeground) return@setChangeListener
+                runOnUiThread {
+                    renderImage()
+                }
             }
             imageBinder?.setErrorListener {
                 toast(it)
+            }
+            imageBinder?.setCountDownListener {
+                if (!isForeground) return@setCountDownListener
+                val text = "$it 秒"
+                runOnUiThread {
+                    countdownTextView.text = text
+                }
             }
         }
 
@@ -36,6 +45,7 @@ class MainActivity : AppCompatActivity() {
             imageBinder = null
         }
     }
+    private var isForeground = false
 
     @SuppressLint("SetTextI18n")
     private fun renderImage() {
@@ -86,6 +96,8 @@ class MainActivity : AppCompatActivity() {
         WallpaperData.load()
         imageFolderPathTextView.text = WallpaperData.imageFolderPath.ifEmpty { "未选择文件夹" }
         timeIntervalEditText.setText(WallpaperData.timeInterval.toString())
+        val defCountdown = "${WallpaperData.timeInterval} 秒"
+        countdownTextView.text = defCountdown
         renderImage()
     }
 
@@ -179,12 +191,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        isForeground = true
         imageBinder?.let {
             renderImage()
         }
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onPause() {
+        super.onPause()
+        isForeground = false
     }
 }
