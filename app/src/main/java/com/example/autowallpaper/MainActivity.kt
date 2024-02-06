@@ -147,6 +147,7 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             imageBinder?.startChangeWallpaper(imageFolderPath, timeInterval)
+            timeIntervalEditText.clearFocus()
         }
         stopButton.setOnClickListener {
             val intent = Intent(this, AutoWallpaperService::class.java)
