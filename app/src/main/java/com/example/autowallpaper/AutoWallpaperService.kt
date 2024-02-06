@@ -52,7 +52,7 @@ object WallpaperData {
     private val prefHelper by lazy { PrefHelper() }
 
     fun load() {
-        timeInterval = prefHelper.getInt(KEY_TIME_INTERVAL, defValue = 20)
+        timeInterval = prefHelper.getInt(KEY_TIME_INTERVAL, defValue = 10)
         imageFolderPath = prefHelper.getString(KEY_IMAGE_FOLDER_PATH)
         isRandom = prefHelper.getBoolean(KEY_RANDOM_CHANGE)
         isChangeLock = prefHelper.getBoolean(KEY_CHANGE_LOCK)
@@ -279,6 +279,10 @@ class AutoWallpaperService : Service() {
             timeInterval: Int
         ) {
             WallpaperData.update(imageFolderPath, timeInterval)
+            directChangeWallpaper()
+        }
+
+        fun directChangeWallpaper() {
             timer?.cancel()
             countdown = WallpaperData.timeInterval
             val newTimer = Timer()

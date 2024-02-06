@@ -39,6 +39,9 @@ class MainActivity : AppCompatActivity() {
                     countdownTextView.text = text
                 }
             }
+            if (WallpaperData.imageSize > 0) {
+                imageBinder?.directChangeWallpaper()
+            }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
