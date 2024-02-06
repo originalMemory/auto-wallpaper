@@ -15,7 +15,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="图片目录" />
+        android:text="@string/img_dir" />
 
     <TextView
         android:id="@+id/imageFolderPathTextView"
@@ -24,7 +24,7 @@
         android:layout_marginTop="10dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:text="壁纸" />
+        android:text="@string/wallpaper" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -34,7 +34,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="刷新时间" />
+            android:text="@string/time_interval" />
 
         <EditText
             android:id="@+id/timeIntervalEditText"
@@ -46,7 +46,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
-            android:text="分" />
+            android:text="@string/second" />
 
     </LinearLayout>
 
@@ -58,19 +58,19 @@
             android:id="@+id/randomCheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="随机切换" />
+            android:text="@string/random_switch" />
 
         <CheckBox
             android:id="@+id/changeLockCheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="更换锁屏" />
+            android:text="@string/switch_lockscreen" />
 
         <CheckBox
             android:id="@+id/resizeSystemCheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="居中缩放系统图" />
+            android:text="@string/scale_system_in_center" />
 
     </LinearLayout>
 
@@ -87,7 +87,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="10dp"
-            android:text="保存" />
+            android:text="@string/btn_save" />
 
         <Space
             android:layout_width="40dp"
@@ -98,7 +98,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:text="停止" />
+            android:text="@string/btn_stop" />
 
         <Space
             android:layout_width="40dp"
@@ -109,7 +109,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:text="下一张" />
+            android:text="@string/btn_next" />
 
 
     </LinearLayout>
@@ -120,7 +120,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <LinearLayout
@@ -138,7 +138,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:text="当前壁纸" />
+                        android:text="@string/cur_system" />
 
                     <TextView
                         android:id="@+id/systemCurIndexTextView"
@@ -155,7 +155,8 @@
                         android:id="@+id/systemCurImageView"
                         android:layout_width="match_parent"
                         tools:src="@drawable/ic_bt_file_picker"
-                        android:layout_height="190dp" />
+                        android:layout_height="190dp"
+                        android:contentDescription="@string/empty" />
 
                 </LinearLayout>
 
@@ -173,7 +174,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:text="下一张壁纸" />
+                        android:text="@string/next_system" />
 
                     <TextView
                         android:id="@+id/systemNextIndexTextView"
@@ -190,7 +191,8 @@
                         android:id="@+id/systemNexImageView"
                         tools:src="@drawable/ic_bt_file_picker"
                         android:layout_width="match_parent"
-                        android:layout_height="190dp" />
+                        android:layout_height="190dp"
+                        android:importantForAccessibility="no" />
 
                 </LinearLayout>
 
@@ -212,7 +214,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:text="当前锁屏" />
+                        android:text="@string/cur_lockscreen" />
 
                     <TextView
                         android:id="@+id/lockCurIndexTextView"
@@ -229,7 +231,8 @@
                         android:id="@+id/lockCurImageView"
                         android:layout_width="match_parent"
                         tools:src="@drawable/ic_bt_file_picker"
-                        android:layout_height="190dp" />
+                        android:layout_height="190dp"
+                        android:importantForAccessibility="no" />
 
                 </LinearLayout>
 
@@ -247,7 +250,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:text="下一张锁屏" />
+                        android:text="@string/next_lockscreen" />
 
                     <TextView
                         android:id="@+id/lockNextIndexTextView"
@@ -264,7 +267,8 @@
                         android:id="@+id/lockNexImageView"
                         android:layout_width="match_parent"
                         tools:src="@drawable/ic_bt_file_picker"
-                        android:layout_height="190dp" />
+                        android:layout_height="190dp"
+                        android:importantForAccessibility="no" />
 
                 </LinearLayout>
 

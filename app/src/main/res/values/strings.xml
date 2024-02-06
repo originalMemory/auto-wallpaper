@@ -2,4 +2,19 @@
     <string name="app_name">玄鸟壁纸</string>
     <string name="system_img_name">桌面：%s</string>
     <string name="lock_img_name">锁屏：%s</string>
+    <string name="img_dir">图片目录</string>
+    <string name="empty"> </string>
+    <string name="wallpaper">壁纸</string>
+    <string name="time_interval">刷新时间</string>
+    <string name="second">秒</string>
+    <string name="random_switch">随机切换</string>
+    <string name="switch_lockscreen">更换锁屏</string>
+    <string name="scale_system_in_center">居中缩放系统图</string>
+    <string name="btn_save">保存</string>
+    <string name="btn_stop">停止</string>
+    <string name="btn_next">下一张</string>
+    <string name="cur_system">当前壁纸</string>
+    <string name="next_system">下一张壁纸</string>
+    <string name="cur_lockscreen">当前锁屏</string>
+    <string name="next_lockscreen">下一张锁屏</string>
 </resources>
