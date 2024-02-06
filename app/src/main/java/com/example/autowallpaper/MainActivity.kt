@@ -52,25 +52,11 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("SetTextI18n")
     private fun renderImage() {
-        WallpaperData.curImagePath?.let {
-            val fileName = it.substringAfterLast('/')
-            systemCurIndexTextView.text =
-                "[${WallpaperData.curIndex + 1}/${WallpaperData.imageSize}]\n$fileName"
-            Glide.with(this).load(it).into(systemCurImageView)
-        }
-
         WallpaperData.nextImagePath?.let {
             val fileName = it.substringAfterLast('/')
             systemNextIndexTextView.text =
                 "[${WallpaperData.nextIndex + 1}/${WallpaperData.imageSize}]\n$fileName"
             Glide.with(this).load(it).into(systemNexImageView)
-        }
-
-        WallpaperData.lockCurImagePath?.let {
-            val fileName = it.substringAfterLast('/')
-            lockCurIndexTextView.text =
-                "[${WallpaperData.lockCurIndex + 1}/${WallpaperData.imageSize}]\n$fileName"
-            Glide.with(this).load(it).into(lockCurImageView)
         }
 
         WallpaperData.lockNextImagePath?.let {
