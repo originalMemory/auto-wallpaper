@@ -10,6 +10,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Binder
+import android.os.Handler
 import android.os.IBinder
 import android.util.Log
 import android.view.View
@@ -18,8 +19,6 @@ import com.example.autowallpaper.helper.GlobalApplication
 import com.example.autowallpaper.helper.PrefHelper
 import com.example.autowallpaper.helper.getImagePathList
 import java.io.File
-import java.util.Timer
-import kotlin.concurrent.timerTask
 
 object WallpaperData {
     private const val KEY_TIME_INTERVAL = "timeInterval"
@@ -46,7 +45,7 @@ object WallpaperData {
             field = value
             prefHelper.put(KEY_RESIZE_SYSTEM, value)
         }
-    var curIndex = 0
+    private var curIndex = 0
     var nextIndex = 0
     private var imagePaths = listOf<String>()
     private val prefHelper by lazy { PrefHelper() }
@@ -96,7 +95,7 @@ object WallpaperData {
     val nextImagePath: String?
         get() = imagePaths.getOrNull(nextIndex)
 
-    val lockCurIndex: Int
+    private val lockCurIndex: Int
         get() = imageSize - curIndex - 1
     val lockNextIndex: Int
         get() = imageSize - nextIndex - 1
@@ -120,19 +119,24 @@ class AutoWallpaperService : Service() {
 
         private val TAG = AutoWallpaperService::class.java.simpleName
 
-        private const val SECOND = 1000L
+        const val SECOND = 1000L
 //        private const val MINUTE = 60 * SECOND
         private const val CHANNEL_ID = "autoWallpaper"
         private const val CHANNEL_NAME = "自动更换壁纸"
         private const val NOTIFICATION_ID = 1
     }
 
-    private var timer: Timer? = null
-    private var countdown = 0
-    private var isChangeLock = false
+    private val handler by lazy { Handler() }
+    private val runnable: Runnable by lazy {
+        Runnable {
+            changeWallpaper()
+            handler.postDelayed(runnable, WallpaperData.timeInterval * SECOND)
+            val nextTimestamp = System.currentTimeMillis() + WallpaperData.timeInterval * SECOND
+            nextTimestampListener?.invoke(nextTimestamp)
+        }
+    }
 
     private fun changeWallpaper() {
-        isChangeLock = true
         try {
             WallpaperData.checkFolder()?.let {
                 errorListener?.invoke(it)
@@ -148,15 +152,12 @@ class AutoWallpaperService : Service() {
             manager.notify(NOTIFICATION_ID, notification)
         } catch (e: Exception) {
             Log.e(TAG, "设置壁纸出错：${e.message}")
-        } finally {
-            countdown = WallpaperData.timeInterval
-            isChangeLock = false
         }
     }
 
     private var wallpaperChangeListener: (() -> Unit)? = null
     private var errorListener: ((String) -> Unit)? = null
-    private var countDownListener: ((Int) -> Unit)? = null
+    private var nextTimestampListener: ((Long) -> Unit)? = null
 
     private fun log(info: String) {
         Log.i(TAG, info)
@@ -270,8 +271,8 @@ class AutoWallpaperService : Service() {
             errorListener = listener
         }
 
-        fun setCountDownListener(listener: (Int) -> Unit) {
-            countDownListener = listener
+        fun setNextTimestampListener(listener: (Long) -> Unit) {
+            nextTimestampListener = listener
         }
 
         fun startChangeWallpaper(
@@ -283,22 +284,8 @@ class AutoWallpaperService : Service() {
         }
 
         fun directChangeWallpaper() {
-            timer?.cancel()
-            countdown = WallpaperData.timeInterval
-            val newTimer = Timer()
-            newTimer.scheduleAtFixedRate(
-                timerTask {
-                    if (isChangeLock) return@timerTask
-                    countdown--
-                    countDownListener?.invoke(countdown)
-                    if (countdown == 0) {
-                        changeWallpaper()
-                    }
-                },
-                0,
-                SECOND
-            )
-            timer = newTimer
+            handler.removeCallbacks(runnable)
+            handler.post(runnable)
         }
 
         fun forceChange() {
@@ -306,8 +293,7 @@ class AutoWallpaperService : Service() {
         }
 
         fun stop() {
-            timer?.cancel()
-            timer = null
+            handler.removeCallbacks(runnable)
             stopForeground(true)
         }
     }

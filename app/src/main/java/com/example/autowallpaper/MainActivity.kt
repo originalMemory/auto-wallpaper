@@ -15,9 +15,13 @@ import kotlinx.android.synthetic.main.activity_main.*
 import me.rosuh.filepicker.bean.FileItemBeanImpl
 import me.rosuh.filepicker.config.AbstractFileFilter
 import me.rosuh.filepicker.config.FilePickerManager
+import java.util.Timer
+import kotlin.concurrent.timerTask
 
 class MainActivity : AppCompatActivity() {
 
+    private var timer: Timer? = null
+    private var nextTimestamp: Long = 0
     private var imageBinder: AutoWallpaperService.ImageBinder? = null
     private val connection = object : ServiceConnection {
 
@@ -32,12 +36,9 @@ class MainActivity : AppCompatActivity() {
             imageBinder?.setErrorListener {
                 toast(it)
             }
-            imageBinder?.setCountDownListener {
-                if (!isForeground) return@setCountDownListener
-                val text = "$it 秒"
-                runOnUiThread {
-                    countdownTextView.text = text
-                }
+            imageBinder?.setNextTimestampListener {
+                nextTimestamp = it
+                if (isForeground) startTimer()
             }
             if (WallpaperData.imageSize > 0) {
                 imageBinder?.directChangeWallpaper()
@@ -138,6 +139,7 @@ class MainActivity : AppCompatActivity() {
         stopButton.setOnClickListener {
             val intent = Intent(this, AutoWallpaperService::class.java)
             imageBinder?.stop()
+            stopTimer()
             stopService(intent)
         }
         nextButton.setOnClickListener {
@@ -159,6 +161,39 @@ class MainActivity : AppCompatActivity() {
 
     private fun toast(content: String) {
         Toast.makeText(this, content, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun startTimer() {
+        timer?.cancel()
+        val newTimer = Timer()
+        newTimer.scheduleAtFixedRate(
+            timerTask {
+                if (nextTimestamp == 0.toLong()) {
+                    stopTimer()
+                    return@timerTask
+                }
+                val interval =
+                    (nextTimestamp - System.currentTimeMillis()) / AutoWallpaperService.SECOND
+                if (interval < 0) {
+                    stopTimer()
+                    return@timerTask
+                }
+                val text = "$interval 秒"
+                runOnUiThread {
+                    countdownTextView.text = text
+                }
+            },
+            0,
+            AutoWallpaperService.SECOND
+        )
+        timer = newTimer
+    }
+
+    private fun stopTimer() {
+        timer?.cancel()
+        timer = null
+        val text = "${WallpaperData.timeInterval} 秒"
+        countdownTextView.text = text
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -185,10 +220,12 @@ class MainActivity : AppCompatActivity() {
         imageBinder?.let {
             renderImage()
         }
+        startTimer()
     }
 
     override fun onPause() {
         super.onPause()
         isForeground = false
+        stopTimer()
     }
 }
