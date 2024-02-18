@@ -193,7 +193,9 @@ class MainActivity : AppCompatActivity() {
         timer?.cancel()
         timer = null
         val text = "${WallpaperData.timeInterval} 秒"
-        countdownTextView.text = text
+        runOnUiThread {
+            countdownTextView.text = text
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
