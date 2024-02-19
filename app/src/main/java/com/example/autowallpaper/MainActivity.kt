@@ -88,6 +88,25 @@ class MainActivity : AppCompatActivity() {
         timeIntervalEditText.setText(WallpaperData.timeInterval.toString())
         val defCountdown = "${WallpaperData.timeInterval} 秒"
         countdownTextView.text = defCountdown
+        for (type in WallpaperData.typeFilter) {
+            when (type) {
+                1 -> type1CheckBox.isChecked = true
+                2 -> type2CheckBox.isChecked = true
+                3 -> type3CheckBox.isChecked = true
+            }
+        }
+        for (level in WallpaperData.levelFilter) {
+            when (level) {
+                1 -> level1CheckBox.isChecked = true
+                2 -> level2CheckBox.isChecked = true
+                3 -> level3CheckBox.isChecked = true
+                4 -> level4CheckBox.isChecked = true
+                5 -> level5CheckBox.isChecked = true
+                6 -> level6CheckBox.isChecked = true
+                7 -> level7CheckBox.isChecked = true
+                8 -> level8CheckBox.isChecked = true
+            }
+        }
         renderImage()
     }
 
@@ -126,15 +145,7 @@ class MainActivity : AppCompatActivity() {
             true
         }
         saveButton.setOnClickListener {
-            val imageFolderPath = imageFolderPathTextView.text.toString()
-
-            val timeInterval = timeIntervalEditText.text.toString().toInt()
-            if (timeInterval == 0) {
-                toast("时间不能为 0 ")
-                return@setOnClickListener
-            }
-            imageBinder?.startChangeWallpaper(imageFolderPath, timeInterval)
-            timeIntervalEditText.clearFocus()
+            saveConfig()
         }
         stopButton.setOnClickListener {
             val intent = Intent(this, AutoWallpaperService::class.java)
@@ -157,6 +168,32 @@ class MainActivity : AppCompatActivity() {
         resizeSystemCheckBox.setOnClickListener {
             WallpaperData.isResizeSystem = resizeSystemCheckBox.isChecked
         }
+    }
+
+    private fun saveConfig() {
+        val imageFolderPath = imageFolderPathTextView.text.toString()
+
+        val timeInterval = timeIntervalEditText.text.toString().toInt()
+        if (timeInterval == 0) {
+            toast("时间不能为 0 ")
+            return
+        }
+        val types = mutableListOf<Int>()
+        if (type1CheckBox.isChecked) types.add(1)
+        if (type2CheckBox.isChecked) types.add(2)
+        if (type3CheckBox.isChecked) types.add(3)
+        val levels = mutableListOf<Int>()
+        if (level1CheckBox.isChecked) levels.add(1)
+        if (level2CheckBox.isChecked) levels.add(2)
+        if (level3CheckBox.isChecked) levels.add(3)
+        if (level4CheckBox.isChecked) levels.add(4)
+        if (level5CheckBox.isChecked) levels.add(5)
+        if (level6CheckBox.isChecked) levels.add(6)
+        if (level7CheckBox.isChecked) levels.add(7)
+        if (level8CheckBox.isChecked) levels.add(8)
+
+        imageBinder?.startChangeWallpaper(imageFolderPath, timeInterval, types, levels)
+        timeIntervalEditText.clearFocus()
     }
 
     private fun toast(content: String) {

@@ -18,4 +18,17 @@
     <string name="cur_lockscreen">当前锁屏</string>
     <string name="next_lockscreen">下一张锁屏</string>
     <string name="countdown_hint">倒计时</string>
+    <string name="type">类型</string>
+    <string name="type1">二次元</string>
+    <string name="type2">Cosplay</string>
+    <string name="type3">写真</string>
+    <string name="level">等级</string>
+    <string name="level1">阴</string>
+    <string name="level2">码</string>
+    <string name="level3">奶</string>
+    <string name="level4">非内衣遮挡</string>
+    <string name="level5">大半胸NSFW</string>
+    <string name="level6">大半胸SFW</string>
+    <string name="level7">小半胸/内裤</string>
+    <string name="level8">普通</string>
 </resources>

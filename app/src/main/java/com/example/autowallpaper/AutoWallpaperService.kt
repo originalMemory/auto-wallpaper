@@ -16,8 +16,9 @@ import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import com.example.autowallpaper.helper.GlobalApplication
+import com.example.autowallpaper.helper.ImageInfo
 import com.example.autowallpaper.helper.PrefHelper
-import com.example.autowallpaper.helper.getImagePathList
+import com.example.autowallpaper.helper.getImageInfoList
 import java.io.File
 
 object WallpaperData {
@@ -27,6 +28,8 @@ object WallpaperData {
     private const val KEY_RANDOM_CHANGE = "randomChange"
     private const val KEY_CHANGE_LOCK = "changeLock"
     private const val KEY_RESIZE_SYSTEM = "resizeSystem"
+    private const val KEY_TYPE_FILTER = "typeFilter"
+    private const val KEY_LEVEL_FILTER = "levelFilter"
 
     var timeInterval = 0
     var imageFolderPath = ""
@@ -45,9 +48,21 @@ object WallpaperData {
             field = value
             prefHelper.put(KEY_RESIZE_SYSTEM, value)
         }
+    var typeFilter: List<Int> = emptyList()
+        set(value) {
+            field = value
+            prefHelper.put(KEY_TYPE_FILTER, value.joinToString(","))
+        }
+    var levelFilter: List<Int> = emptyList()
+        set(value) {
+            field = value
+            prefHelper.put(KEY_LEVEL_FILTER, value.joinToString(","))
+        }
+
     private var curIndex = 0
     var nextIndex = 0
-    private var imagePaths = listOf<String>()
+    private var totalImages = listOf<ImageInfo>()
+    private var filteredImages = listOf<ImageInfo>()
     private val prefHelper by lazy { PrefHelper() }
 
     fun load() {
@@ -56,33 +71,56 @@ object WallpaperData {
         isRandom = prefHelper.getBoolean(KEY_RANDOM_CHANGE)
         isChangeLock = prefHelper.getBoolean(KEY_CHANGE_LOCK)
         isResizeSystem = prefHelper.getBoolean(KEY_RESIZE_SYSTEM)
+        typeFilter =
+            prefHelper.getString(KEY_TYPE_FILTER).split(",").mapNotNull { it.toIntOrNull() }
+        levelFilter =
+            prefHelper.getString(KEY_LEVEL_FILTER).split(",").mapNotNull { it.toIntOrNull() }
         nextIndex = prefHelper.getInt(KEY_CURRENT_INDEX)
         checkFolder()
-        refreshNextIndex()
     }
 
     fun refreshNextIndex() {
         if (imageSize == 0) return
         curIndex = nextIndex
         nextIndex = if (isRandom) {
-            (imagePaths.indices).random()
+            (filteredImages.indices).random()
         } else {
-            if (nextIndex < imagePaths.size - 1) nextIndex + 1 else 0
+            if (nextIndex < filteredImages.size - 1) nextIndex + 1 else 0
         }
         prefHelper.put(KEY_CURRENT_INDEX, curIndex)
     }
 
-    fun checkFolder(): String? {
-        if (imagePaths.isNotEmpty() && nextImagePath != null) return null
-        imagePaths = File(imageFolderPath).getImagePathList()
-        return if (imagePaths.isEmpty()) "文件夹没有图片" else null
+    private fun checkFolder() {
+        totalImages = File(imageFolderPath).getImageInfoList()
+        updateFilter()
     }
 
-    fun update(imageFolderPath: String, timeInterval: Int) {
-        if (this.imageFolderPath != imageFolderPath) {
+    private fun updateFilter() {
+        filteredImages = totalImages.filter {
+            (typeFilter.isEmpty() || it.type in typeFilter) &&
+                (levelFilter.isEmpty() || it.level in levelFilter)
+        }
+        refreshNextIndex()
+        Log.i(
+            "updateFilter",
+            "type: $typeFilter, level: $levelFilter, totalSize: ${totalImages.size}, filteredSize: ${filteredImages.size}"
+        )
+    }
+
+    fun update(
+        imageFolderPath: String, timeInterval: Int,
+        types: List<Int>,
+        levels: List<Int>
+    ) {
+        val filterChanged = typeFilter != types || levelFilter != levels
+        typeFilter = types
+        levelFilter = levels
+        val pathChanged = this.imageFolderPath != imageFolderPath
+        if (pathChanged) {
             this.imageFolderPath = imageFolderPath
             prefHelper.put(KEY_IMAGE_FOLDER_PATH, imageFolderPath)
-            imagePaths = listOf()
+            totalImages = listOf()
+            checkFolder()
             curIndex = 0
             nextIndex = 0
         }
@@ -90,27 +128,40 @@ object WallpaperData {
             this.timeInterval = timeInterval
             prefHelper.put(KEY_TIME_INTERVAL, timeInterval)
         }
+        if (filterChanged && !pathChanged) {
+            updateFilter()
+        }
     }
 
     val nextImagePath: String?
-        get() = imagePaths.getOrNull(nextIndex)
+        get() = filteredImages.getOrNull(nextIndex)?.path
 
     private val lockCurIndex: Int
         get() = imageSize - curIndex - 1
     val lockNextIndex: Int
         get() = imageSize - nextIndex - 1
 
+    val curImage: ImageInfo?
+        get() = filteredImages.getOrNull(curIndex)
+
     val curImagePath: String?
-        get() = imagePaths.getOrNull(curIndex)
+        get() = curImage?.path
+
+    val lockCurImage: ImageInfo?
+        get() = filteredImages.getOrNull(lockCurIndex)
 
     val lockCurImagePath: String?
-        get() = imagePaths.getOrNull(lockCurIndex)
+        get() = lockCurImage?.path
 
     val lockNextImagePath: String?
-        get() = imagePaths.getOrNull(lockNextIndex)
+        get() = filteredImages.getOrNull(lockNextIndex)?.path
 
     val imageSize
-        get() = imagePaths.size
+        get() = filteredImages.size
+
+    // region 筛选
+
+    // endregion
 }
 
 class AutoWallpaperService : Service() {
@@ -120,7 +171,8 @@ class AutoWallpaperService : Service() {
         private val TAG = AutoWallpaperService::class.java.simpleName
 
         const val SECOND = 1000L
-//        private const val MINUTE = 60 * SECOND
+
+        //        private const val MINUTE = 60 * SECOND
         private const val CHANNEL_ID = "autoWallpaper"
         private const val CHANNEL_NAME = "自动更换壁纸"
         private const val NOTIFICATION_ID = 1
@@ -138,10 +190,6 @@ class AutoWallpaperService : Service() {
 
     private fun changeWallpaper() {
         try {
-            WallpaperData.checkFolder()?.let {
-                errorListener?.invoke(it)
-                return
-            }
             val imagePath = WallpaperData.nextImagePath ?: return
             val lockImagePath = WallpaperData.lockNextImagePath ?: return
             WallpaperData.refreshNextIndex()
@@ -233,7 +281,7 @@ class AutoWallpaperService : Service() {
         val remoteView = RemoteViews(packageName, R.layout.notification)
         val systemImgName = applicationContext.getString(
             R.string.system_img_name,
-            WallpaperData.curImagePath?.substringAfterLast('/')
+            WallpaperData.curImage?.title
         )
         remoteView.setTextViewText(R.id.systemImgNameTextView, systemImgName)
         remoteView.setViewVisibility(
@@ -243,7 +291,7 @@ class AutoWallpaperService : Service() {
         if (WallpaperData.isChangeLock) {
             val lockImgName = applicationContext.getString(
                 R.string.lock_img_name,
-                WallpaperData.lockCurImagePath?.substringAfterLast('/')
+                WallpaperData.lockCurImage?.title
             )
             remoteView.setTextViewText(R.id.lockImgNameTextView, lockImgName)
         }
@@ -277,9 +325,11 @@ class AutoWallpaperService : Service() {
 
         fun startChangeWallpaper(
             imageFolderPath: String,
-            timeInterval: Int
+            timeInterval: Int,
+            types: List<Int>,
+            levels: List<Int>
         ) {
-            WallpaperData.update(imageFolderPath, timeInterval)
+            WallpaperData.update(imageFolderPath, timeInterval, types, levels)
             directChangeWallpaper()
         }
 
@@ -289,7 +339,9 @@ class AutoWallpaperService : Service() {
         }
 
         fun forceChange() {
-            changeWallpaper()
+            Thread {
+                changeWallpaper()
+            }.start()
         }
 
         fun stop() {

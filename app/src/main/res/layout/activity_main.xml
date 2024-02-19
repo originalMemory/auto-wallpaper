@@ -112,26 +112,113 @@
 
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/filterContainer"
-        android:layout_width="match_parent"
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/checkboxContainer"
+        app:layout_constraintStart_toStartOf="@id/imgDirHint"
+        android:id="@+id/typeTextView"
+        android:text="@string/type" />
+
+    <LinearLayout
+        android:id="@+id/typeContainer"
+        android:layout_width="match_parent"
+        app:layout_constraintTop_toBottomOf="@id/typeTextView"
         app:layout_constraintStart_toStartOf="@id/imgDirHint"
         android:layout_height="wrap_content" >
 
-        <TextView
+        <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="类型" />
+            android:id="@+id/type1CheckBox"
+            android:text="@string/type1" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/type2CheckBox"
+            android:text="@string/type2" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/type3CheckBox"
+            android:text="@string/type3" />
 
     </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/typeContainer"
+        app:layout_constraintStart_toStartOf="@id/imgDirHint"
+        android:id="@+id/levelTextView"
+        android:text="@string/level" />
+
+    <com.google.android.flexbox.FlexboxLayout
+        android:id="@+id/levelContainer"
+        android:layout_width="match_parent"
+        app:layout_constraintTop_toBottomOf="@id/levelTextView"
+        app:layout_constraintStart_toStartOf="@id/imgDirHint"
+        app:flexWrap="wrap"
+        android:layout_height="wrap_content" >
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/level1CheckBox"
+            android:text="@string/level1" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/level2CheckBox"
+            android:text="@string/level2" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/level3CheckBox"
+            android:text="@string/level3" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/level4CheckBox"
+            android:text="@string/level4" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/level5CheckBox"
+            android:text="@string/level5" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/level6CheckBox"
+            android:text="@string/level6" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/level7CheckBox"
+            android:text="@string/level7" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/level8CheckBox"
+            android:text="@string/level8" />
+
+    </com.google.android.flexbox.FlexboxLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
         android:id="@+id/buttonContainer"
-        app:layout_constraintTop_toBottomOf="@id/filterContainer"
+        app:layout_constraintTop_toBottomOf="@id/levelContainer"
         app:layout_constraintStart_toStartOf="@id/imgDirHint"
         android:gravity="center"
         android:orientation="horizontal">
